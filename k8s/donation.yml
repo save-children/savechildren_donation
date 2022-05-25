@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: donation-deployment
+  labels:
+    app: donation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: donation
+  template:
+    metadata:
+      labels:
+        app: donation
+    spec:
+      containers:
+        - name: donation
+          image: supungamage/donation:latest
+          ports:
+            - containerPort: 8083
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: orphanage-configmap
+                  key: SPRING_PROFILES_ACTIVE
+            - name: SPRING_ZIPKIN_BASEURL
+              valueFrom:
+                configMapKeyRef:
+                  name: orphanage-configmap
+                  key: SPRING_ZIPKIN_BASEURL
+            - name: SPRING_CONFIG_IMPORT
+              valueFrom:
+                configMapKeyRef:
+                  name: orphanage-configmap
+                  key: SPRING_CONFIG_IMPORT
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              valueFrom:
+                configMapKeyRef:
+                  name: orphanage-configmap
+                  key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: donation-service
+spec:
+  selector:
+    app: donation
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 8083
+      targetPort: 8083
